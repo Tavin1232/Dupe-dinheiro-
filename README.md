@@ -4,7 +4,7 @@ local starterGui = game:GetService("StarterGui")
 
 -- Adicionar a biblioteca KavoUI
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Anti-Cheat Menu", "DarkTheme")
+local Window = Library.CreateLib("Dupe Test Black", "DarkTheme")
 
 -- Criar aba principal
 local Main = Window:NewTab("Main")
