@@ -1,45 +1,93 @@
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local Button1 = Instance.new("TextButton")
-local Button2 = Instance.new("TextButton")
-local Button3 = Instance.new("TextButton")
+-- Certifique-se de executar isso no executor Delta ou Xeno
+local player = game.Players.LocalPlayer
+local starterGui = game:GetService("StarterGui")
 
-ScreenGui.Parent = game.CoreGui
+-- Criar GUI principal
+local screenGui = Instance.new("ScreenGui", player.PlayerGui)
+screenGui.Name = "ExploitGUI"
 
-Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.new(1, 1, 1)
-Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
-Frame.Size = UDim2.new(0.4, 0, 0.4, 0)
+local mainFrame = Instance.new("Frame", screenGui)
+mainFrame.Size = UDim2.new(0, 250, 0, 150)
+mainFrame.Position = UDim2.new(0.5, -125, 0.4, -75)
+mainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+mainFrame.BorderSizePixel = 2
+mainFrame.Draggable = true -- Permite arrastar a interface
+mainFrame.Active = true
 
-Button1.Parent = Frame
-Button1.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
-Button1.Position = UDim2.new(0.1, 0, 0.1, 0)
-Button1.Size = UDim2.new(0.8, 0, 0.2, 0)
-Button1.Text = "Dupe 1"
-Button1.MouseButton1Click:Connect(function()
-    game.Players.LocalPlayer.leaderstats.Money.Value = game.Players.LocalPlayer.leaderstats.Money.Value + 1000
-    print("Dupe 1 selecionado")
+-- Criar os botões
+local function createButton(text, position)
+    local button = Instance.new("TextButton", mainFrame)
+    button.Size = UDim2.new(0, 200, 0, 30)
+    button.Position = UDim2.new(0.5, -100, 0, position)
+    button.Text = text
+    button.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextScaled = true
+    return button
+end
+
+local bypassButton = createButton("Ativar Bypass", 10)
+local dupeButton1 = createButton("Dupe Function 1", 50)
+local dupeButton2 = createButton("Dupe Function 2", 90)
+
+-- Variáveis de controle
+local dupe1Active = false
+local dupe2Active = false
+
+local dupe1Coroutine
+local dupe2Coroutine
+
+-- Funções específicas para os botões
+bypassButton.MouseButton1Click:Connect(function()
+    -- Exemplo de código de bypass
+    local mt = getrawmetatable(game)
+    setreadonly(mt, false)
+    local old = mt.__namecall
+    mt.__namecall = newcclosure(function(...)
+        -- Coloque a lógica do bypass aqui
+        return old(...)
+    end)
+    print("Bypass ativado")
 end)
 
-Button2.Parent = Frame
-Button2.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
-Button2.Position = UDim2.new(0.1, 0, 0.4, 0)
-Button2.Size = UDim2.new(0.8, 0, 0.2, 0)
-Button2.Text = "Dupe 2"
-Button2.MouseButton1Click:Connect(function()
-    game.Players.LocalPlayer.leaderstats.Money.Value = game.Players.LocalPlayer.leaderstats.Money.Value + 2000
-    print("Dupe 2 selecionado")
-end)
-
-Button3.Parent = Frame
-Button3.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
-Button3.Position = UDim2.new(0.1, 0, 0.7, 0)
-Button3.Size = UDim2.new(0.8, 0, 0.2, 0)
-Button3.Text = "Gerador Dinheiro"
-Button3.MouseButton1Click:Connect(function()
-    while true do
-        game.Players.LocalPlayer.leaderstats.Money.Value = game.Players.LocalPlayer.leaderstats.Money.Value + 100
-        wait(1) -- Adiciona dinheiro a cada segundo
+local function generateMoney(player, amount, dupeActive)
+    while dupeActive do
+        wait(1) -- Intervalo de 1 segundo
+        local playerData = player:FindFirstChild("PlayerData")
+        if playerData and playerData:FindFirstChild("Money") then
+            playerData.Money.Value = playerData.Money.Value + amount
+            print("Dinheiro gerado:", amount)
+            amount = amount * 1.1 -- Aumenta a quantia em 10%
+        end
     end
-    print("Gerador de Dinheiro selecionado")
+end
+
+dupeButton1.MouseButton1Click:Connect(function()
+    if not dupe1Active then
+        dupe1Active = true
+        dupe1Coroutine = coroutine.wrap(generateMoney)
+        dupe1Coroutine(player, 1000, dupe1Active)
+        print("Dupe Function 1 ativada")
+    else
+        dupe1Active = false
+        if dupe1Coroutine then
+            coroutine.close(dupe1Coroutine)
+        end
+        print("Dupe Function 1 desativada")
+    end
+end)
+
+dupeButton2.MouseButton1Click:Connect(function()
+    if not dupe2Active then
+        dupe2Active = true
+        dupe2Coroutine = coroutine.wrap(generateMoney)
+        dupe2Coroutine(player, 1000, dupe2Active)
+        print("Dupe Function 2 ativada")
+    else
+        dupe2Active = false
+        if dupe2Coroutine then
+            coroutine.close(dupe2Coroutine)
+        end
+        print("Dupe Function 2 desativada")
+    end
 end)
