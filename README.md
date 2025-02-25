@@ -1,68 +1,66 @@
--- Certifique-se de executar isso no executor Delta ou Xeno
 local player = game.Players.LocalPlayer
-local starterGui = game:GetService("StarterGui")
+local humanoidRootPart = player.Character:WaitForChild("HumanoidRootPart")
+local running = true  -- O Auto Farm começa imediatamente
 
--- Adicionar a biblioteca KavoUI
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Dupe Test Black", "DarkTheme")
+-- Coordenadas dos três locais de entrega fornecidos
+local locations = {
+    Vector3.new(-246.2454833984375, 6.7608842849731445, -103.72569274902344),  -- Primeiro local de entrega
+    Vector3.new(60.48515319824219, 5.763455390930176, 656.7576904296875),    -- Segundo local de entrega
+    Vector3.new(807.6621704101562, 6.728733062744141, 49.6536865234375)      -- Terceiro local de entrega
+}
 
--- Criar aba principal
-local Main = Window:NewTab("Main")
-local MainSection = Main:NewSection("Features")
-
--- Variáveis de controle
-local dupe1Active = false
-local dupe2Active = false
-
--- Funções específicas para os botões
-MainSection:NewButton("Ativar Bypass", "Ativa o bypass", function()
-    -- Exemplo de código de bypass
-    local mt = getrawmetatable(game)
-    setreadonly(mt, false)
-    local old = mt.__namecall
-    mt.__namecall = newcclosure(function(...)
-        -- Coloque a lógica do bypass aqui
-        return old(...)
-    end)
-    print("Bypass ativado")
-end)
-
-local function generateMoney(amount)
-    while wait(1) do
-        local playerData = player:FindFirstChild("PlayerData")
-        if playerData and playerData:FindFirstChild("Money") then
-            playerData.Money.Value = playerData.Money.Value + amount
-            print("Dinheiro gerado:", amount)
-            amount = amount * 1.1 -- Aumenta a quantia em 10%
-        else
-            print("PlayerData ou Money não encontrado!")
-            break
-        end
+-- Função para teleportar o jogador
+local function teleportTo(position)
+    if humanoidRootPart then
+        humanoidRootPart.CFrame = CFrame.new(position)  -- Atualizando o CFrame diretamente
     end
 end
 
-MainSection:NewButton("Dupe Function 1", "Ativa a função de duplicação 1", function()
-    if not dupe1Active then
-        dupe1Active = true
-        dupe1Coroutine = coroutine.wrap(generateMoney)
-        dupe1Coroutine(1000)
-        print("Dupe Function 1 ativada")
-    else
-        dupe1Active = false
-        dupe1Coroutine = nil
-        print("Dupe Function 1 desativada")
-    end
-end)
+-- Função para pressionar uma tecla por um tempo
+local function pressKey(key, duration)
+    local virtualInput = game:GetService("VirtualInputManager")
+    virtualInput:SendKeyEvent(true, key, false, game)
+    task.wait(duration)
+    virtualInput:SendKeyEvent(false, key, false, game)
+end
 
-MainSection:NewButton("Dupe Function 2", "Ativa a função de duplicação 2", function()
-    if not dupe2Active then
-        dupe2Active = true
-        dupe2Coroutine = coroutine.wrap(generateMoney)
-        dupe2Coroutine(1000)
-        print("Dupe Function 2 ativada")
-    else
-        dupe2Active = false
-        dupe2Coroutine = nil
-        print("Dupe Function 2 desativada")
+-- Função para coletar o gás
+local function collectGas()
+    teleportTo(Vector3.new(-496.87, 4.77, -47.41)) -- Posição do botijão
+    task.wait(1)
+    pressKey(Enum.KeyCode.E, 4) -- Segura a tecla E para pegar o botijão
+    local gasCollected = false
+    -- Verifica se o botijão foi coletado
+    while not gasCollected do
+        if player.Character:FindFirstChild("HumanoidRootPart") then
+            gasCollected = true
+        end
+        task.wait(0.1)
     end
-end)
+end
+
+-- Função para entregar o gás (vai para uma das coordenadas)
+local function deliverGas()
+    -- Escolhe um local de entrega aleatório das coordenadas fornecidas
+    local deliveryLocation = locations[math.random(1, #locations)]
+    teleportTo(deliveryLocation) -- Teletransporta para o local de entrega
+    task.wait(1) -- Aguarda o teletransporte
+    -- Verifica se o jogador chegou ao local de entrega correto
+    if (humanoidRootPart.Position - deliveryLocation).magnitude < 5 then
+        pressKey(Enum.KeyCode.E, 4) -- Pressiona E para entregar o botijão
+    else
+        warn("Erro: Jogador não chegou ao local de entrega!")
+    end
+end
+
+-- Função para ativar e desativar o Auto Farm Gas
+local function autoFarmGas()
+    while running do
+        collectGas()    -- Pega o botijão
+        deliverGas()    -- Entrega o gás
+        task.wait(2)    -- Espera antes de repetir
+    end
+end
+
+-- Inicia o Auto Farm assim que o código for executado
+autoFarmGas()
